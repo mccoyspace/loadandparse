@@ -222,7 +222,7 @@ def writeGCode(theList, theFile):
 			file.write('\n')
 		file.write('M3 S165\n\n')
 
-objectsList = loadandparse(theFile = '/Users/mccoy/Desktop/joined2-part1.gcode')
+objectsList = loadandparse(theFile = '/Users/mccoy/Desktop/file.gcode')
 #workingList = objectsList.copy()
 
 sortDirection(objectsList, True, True) #first true/false = y-axis vs x-axis sort. second true/false = bigger location to smaller vs smaller location to bigger
@@ -246,7 +246,7 @@ shiftShapes(objectsList, 67, 0)
 #printShapeCount(objectsList)
 printMinMax()
 
-writeGCode(objectsList, '/Users/mccoy/Desktop/joined2-part1b.gcode')
+writeGCode(objectsList, '/Users/mccoy/Desktop/output.gcode')
 #print(workingList)
 #print(objectsList)
 #print('\n')
