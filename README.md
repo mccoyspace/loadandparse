@@ -8,6 +8,7 @@ This is designed to read in the g-code as it is structured from my version of ps
 from https://github.com/mccoyspace/pstoedit
 
 This tool can: 
+
 read in objects from a g-code file 
 scale the drawing (independently in X/Y axis)
 shift the drawing (pos/neg in X and Y)
@@ -20,6 +21,7 @@ count the total number of shapes and points
 It writes the modified g-code out to a file.
 
 to do: 
+
 calculate total distance travelled to help estimate ink usage. 
 scale to fit given paper sizes
 split output to different files 
