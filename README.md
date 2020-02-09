@@ -25,8 +25,7 @@ calculate the bounding box of the drawing
 
 count the total number of shapes and points
 
-
-It writes the modified g-code out to a file.
+write the modified g-code out to a new file
 
 
 
