@@ -7,8 +7,15 @@ I just edit the function calls that I need, comment out the ones I don't and run
 This is designed to read in the g-code as it is structured from my version of pstoedit
 from https://github.com/mccoyspace/pstoedit
 
-This tool can read in objects from a g-code file, scale, shift, rotate, sort (right/left/up/down or by size),
-and give the bounding box of the drawing.
+This tool can: 
+read in objects from a g-code file 
+scale the drawing (independently in X/Y axis)
+shift the drawing (pos/neg in X and Y)
+rotate (90 degrees ccw)
+sort the drawing order (from right to left/left to right/top to bottom/bottom to top)
+sort drawing order by size (biggest to smallest/smallest to biggest)
+calculate the bounding box of the drawing
+count the total number of shapes and points
 
 It writes the modified g-code out to a file.
 
