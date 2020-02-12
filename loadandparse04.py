@@ -8,8 +8,8 @@ global maxY
 
 
 headerData=[] #store the gcode file's header data in a global for retrieval when we write out the final file
-minX = 0.0
-minY = 0.0
+minX = 800.0
+minY = 800.0
 maxX = 0.1
 maxY = 0.1
 
@@ -140,8 +140,8 @@ def resetMinMax():
 	global maxX
 	global maxY
 
-	minX = 0.0
-	minY = 0.0
+	minX = 800.0
+	minY = 800.0
 	maxX = 0.1
 	maxY = 0.1
 
