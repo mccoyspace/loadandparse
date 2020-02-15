@@ -1,17 +1,24 @@
 #!/usr/bin/env python3
 
-global headerData
-global minX
-global minY
-global maxX
-global maxY
+global headerData #list that contains the header portion of the gcode file data, before the first object's coordinates
+global objectsList #a list of objects, each object is a list of 2 coordinate values, themselves stored as a list
+global prunedObjects
+global minX # X axis coordinate of the lowest most drawing mark
+global minY # Y axis coordinate of the lowest most drawing mark
+global maxX # X axis coordinate of the highest most drawing mark
+global maxY # Y axis coordinate of the highest most drawing mark
+global dimX # X axis dimension of the drawing's bounding box natively in mm
+global dimY # Y axis dimension of the drawing's bounding box natively in mm
 
 
 headerData=[] #store the gcode file's header data in a global for retrieval when we write out the final file
+cutObjects=[] #some functions cut out groups of objects based on various criteria. the cut ones are saved here
 minX = 800.0
-minY = 800.0
+minY = 1250.0
 maxX = 0.1
 maxY = 0.1
+dimX = 0.1
+dimY = 0.1
 
 def loadandparse(theFile):
 
@@ -51,8 +58,8 @@ def loadandparse(theFile):
 						x_posNum=x_pos[1:] #trim off the X character at the beginning, leaving just the numbers
 						y_posNum=y_pos[1:] #trim off the Y character at the beginning, leaving just the numbers
 
-						finalX = round(float(x_posNum),2) #round down to two decimal places == one hundreth of a mm
-						finalY = round(float(y_posNum),2) # and convert from string to float
+						finalX = round(float(x_posNum),1) #round down to two decimal places == one hundreth of a mm
+						finalY = round(float(y_posNum),1) # and convert from string to float
 						thisObjlist.append([finalX, finalY]) #add the points (as a 2-item list of floats) to the current shape list DONE!												
 						calcMinMax(finalX, finalY)
 
@@ -90,8 +97,8 @@ def scaleShapes(theList, theMultipleX, theMultipleY):
 		for coords in shape:
 			currentX = coords[0]
 			currentY = coords[1]
-			coords[0] = round(float(currentX * theMultipleX),2)
-			coords[1] = round(float(currentY * theMultipleY),2)
+			coords[0] = round(float(currentX * theMultipleX),1)
+			coords[1] = round(float(currentY * theMultipleY),1)
 			calcMinMax(coords[0], coords[1])
 			#giveFeedback()
 	return(theList)
@@ -103,13 +110,13 @@ def shiftShapes(theList, theOffsetX, theOffestY):
 		for coords in shape:
 			currentX = coords[0]
 			currentY = coords[1]
-			coords[0] = round(float(currentX + theOffsetX),2)
-			coords[1] = round(float(currentY + theOffestY),2)
+			coords[0] = round(float(currentX + theOffsetX),1)
+			coords[1] = round(float(currentY + theOffestY),1)
 			calcMinMax(coords[0], coords[1])
 			#giveFeedback()
 	return(theList)	
 
-def rotate90(theList):
+def mirror90(theList):
 	print('rotating shapes')
 	resetMinMax()
 	for shape in theList:
@@ -119,11 +126,53 @@ def rotate90(theList):
 				#giveFeedback()
 	return(theList)
 
+
+def rotate90(theList):
+	print('rotating shapes')
+	tempMinX=minX
+	tempMinY=minY
+	tempMaxX=maxX
+	tempMaxY=maxY
+	resetMinMax()
+	if (maxX >= maxY):
+		for shape in theList:
+			for coords in shape:
+				currentX = coords[0]
+				currentY = coords[1]
+				coords[1] = (round(float(currentX * -1),1))+(tempMaxX+tempMinX)
+				coords[0] = round(float(currentY * 1),1)
+				calcMinMax(coords[0], coords[1])
+	else:
+		for shape in theList:
+			for coords in shape:
+				currentX = coords[0]
+				currentY = coords[1]
+				coords[0] = (round(float(currentY * -1),1))+(tempMaxY+tempMinY)
+				coords[1] = round(float(currentX * 1),1)
+				calcMinMax(coords[0], coords[1])
+	return(theList)
+
+def pruneShapes(theList, cutoff):  #pruned objects are NOT saved. The data is lost. Cut/split objects (not this function) are saved
+	global objectsList
+	print('pruning shapes smaller than '+str(cutoff))
+	tempList = []
+	for shape in theList:
+		#print(len(shape))
+		if (len(shape)>=cutoff):
+			tempList.append(shape)
+			#print('added')
+	#print(len(tempList))
+	objectsList.clear()
+	objectsList=tempList.copy()
+	tempList.clear()
+
 def calcMinMax(theX, theY):
 	global minX
 	global minY
 	global maxX
 	global maxY
+	global dimX
+	global dimY
 
 	if theX > maxX: 
 		maxX = theX
@@ -134,16 +183,23 @@ def calcMinMax(theX, theY):
 	if theY < minY:
 		minY = theY
 
+	dimX = round((maxX - minX),2)
+	dimY = round((maxY - minY),2)
+
 def resetMinMax():
 	global minX
 	global minY
 	global maxX
 	global maxY
+	global dimX
+	global dimY
 
 	minX = 800.0
-	minY = 800.0
+	minY = 1250.0
 	maxX = 0.1
 	maxY = 0.1
+	dimX = 0.1
+	dimY = 0.1
 
 def giveFeedback():
 	print('.', end='')
@@ -197,6 +253,8 @@ def printMinMax():
 	global maxX
 	global maxY
 	print('min= ' + str(minX)+'mm, '+str(minY) + 'mm  max= '+ str(maxX)+'mm, '+str(maxY)+'mm')
+	print('drawing dimension: '+str(dimX)+'mm by '+str(dimY)+'mm')
+	print('drawing dimension: '+str(round(dimX/25.4,2))+'in by '+str(round(dimY/25.4,2))+'in\n')
 
 def writeGCode(theList, theFile):
 	print('writing file')
@@ -222,31 +280,34 @@ def writeGCode(theList, theFile):
 			file.write('\n')
 		file.write('M3 S165\n\n')
 
-objectsList = loadandparse(theFile = '/Users/mccoy/Desktop/file.gcode')
+objectsList = loadandparse(theFile = '/Users/mccoy/Desktop/wholefigure2b.gcode')
 #workingList = objectsList.copy()
 
-sortDirection(objectsList, True, True) #first true/false = y-axis vs x-axis sort. second true/false = bigger location to smaller vs smaller location to bigger
 
 #printObjectsList(objectsList)
 
 #shiftShapes(objectsList, 30, -50) #x shift value in mm, y shift value in mm
+printShapeCount(objectsList)
+printMinMax()
+rotate90(objectsList)
+#scaleShapes(objectsList, 0.87, -1) #x scale value, y scale value
+sortDirection(objectsList, True, False) #first true/false = y-axis vs x-axis sort. second true/false = bigger location to smaller vs smaller location to bigger
 
-#rotate90(objectsList)
-#scaleShapes(objectsList, 0.3745, 0.2196) #x scale value, y scale value
 
+#shiftShapes(objectsList, 67, 1250)
 #sortSize(objectsList, True) #theDirection: True = bigger to smaller,,, False = smaller to bigger
-shiftShapes(objectsList, 67, 0)
-
 #print('\n')
 #printHeader()
 #printObjectsList(objectsList)
 #printMinMax()
 #printGCode(objectsList)
 #print('\n')
-#printShapeCount(objectsList)
+printShapeCount(objectsList)
 printMinMax()
-
-writeGCode(objectsList, '/Users/mccoy/Desktop/output.gcode')
+rotate90(objectsList)
+printShapeCount(objectsList)
+printMinMax()
+#writeGCode(objectsList, '/Users/mccoy/Desktop/wholefigure2c.gcode')
 #print(workingList)
 #print(objectsList)
 #print('\n')
