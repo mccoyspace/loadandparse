@@ -27,7 +27,7 @@ count the total number of shapes and points
 
 calculate total distance travelled to help estimate ink usage. 
 
-split output to different files 
+split output to different files based on various criteria 
 
 scale to fit given paper sizes
 
