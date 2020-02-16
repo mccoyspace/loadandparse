@@ -25,6 +25,10 @@ calculate the bounding box of the drawing
 
 count the total number of shapes and points
 
+split output to different files 
+
+scale to fit given paper sizes
+
 write the modified g-code out to a new file
 
 
@@ -34,7 +38,7 @@ to do:
 
 calculate total distance travelled to help estimate ink usage. 
 
-scale to fit given paper sizes
 
-split output to different files 
+
+
 
